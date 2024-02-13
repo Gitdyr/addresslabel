@@ -11,5 +11,11 @@ The module was originally created back in 2016.
 
 The module works with PrestaShop 1.6, 1.7, 8.0 and 8.1.
 
+## Installation
+
+Download the ZIP file here from GitHub. Unpack the file to the modules
+directory in your shop and rename the directory to get rid of the
+"-main" part. Now you can install the module from back office.
+
 ## License
 MIT License. Copyright (c) 2024 Kjeld Borch Egevang
