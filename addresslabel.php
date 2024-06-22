@@ -6,12 +6,18 @@
 *  @copyright 2023 Kjeld Borch Egevang
 *  @license    http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *
-*  $Date: 2023/02/17 03:54:10 $
+*  $Date: 2024/06/22 04:05:30 $
 *  E-mail: kjeld@mail4us.dk
 */
 
 class AddressLabel extends Module
 {
+    private $setup;
+    private $setup_vars;
+    private $v177;
+    private $v16;
+    private $v17;
+
     public function __construct()
     {
         $this->v16 = _PS_VERSION_ >= "1.6.0.0";
@@ -19,7 +25,7 @@ class AddressLabel extends Module
         $this->v177 = _PS_VERSION_ >= "1.7.7.0";
         $this->name = 'addresslabel';
         $this->tab = 'shipping_logistics';
-        $this->version = '0.0.5';
+        $this->version = '0.0.6';
         $this->author = 'Kjeld Borch Egevang';
         $this->need_instance = 0;
         $this->bootstrap = true;
@@ -374,14 +380,16 @@ class AddressLabel extends Module
         if ($token != $order->secure_key) {
             die('Bad token');
         }
+        $id_lang = $order->id_lang;
         $address = new Address($order->id_address_delivery);
         $country = new Country($address->id_country);
+        $state = new State($address->id_state);
+        $countryName = Country::getNameById($id_lang, $country->id);
+        $stateName = State::getNameById($state->id);
+        $shopState = new State(Configuration::get('PS_SHOP_STATE_ID'));
+        $shopStateName = State::getNameById($shopState->id);
         $shopCountry = new Country(Configuration::get('PS_SHOP_COUNTRY_ID'));
-        $shopCountryName = Country::getNameById(
-            $order->id_lang,
-            Configuration::get('PS_SHOP_COUNTRY_ID')
-        );
-
+        $shopCountryName = Country::getNameById($id_lang, $shopCountry->id);
         if ($setup->width > $setup->height)
             $pdf = new TCPDF('L', 'mm', array($setup->width, $setup->height));
         else
@@ -396,8 +404,9 @@ class AddressLabel extends Module
         $lines[] = $address->address1;
         $lines[] = $address->address2;
         $lines[] = $address->postcode.' '.$address->city;
+        $lines[] = $stateName;
         if ($country->iso_code != $shopCountry->iso_code)
-            $lines[] = $shopCountryName;
+            $lines[] = $countryName;
         $this->addPage($pdf, $lines, false);
 
         if ($setup->sender) {
@@ -407,6 +416,7 @@ class AddressLabel extends Module
             $lines[] = Configuration::get('PS_SHOP_ADDR2');
             $lines[] = Configuration::get('PS_SHOP_CODE').' '.
                 Configuration::get('PS_SHOP_CITY');
+            $lines[] = $shopStateName;
             if ($country->iso_code != $shopCountry->iso_code)
                 $lines[] = $shopCountryName;
             $this->addPage($pdf, $lines, true);
